@@ -26,6 +26,10 @@ This is a style match only. No Uber name, logo or artwork is used.
 | D16 | Illustrations are 4:3 SVGs in black, white and `#e2e2e2` only, set inside a `canvas-soft` empty-state card. | Plan section 5: monochrome 4:3 illustrations. | 1 |
 | D17 | Content container caps at 560px and centres on desktop. | The file's ~1200px marketing container is too wide for a phone-first utility. | 1 |
 | D18 | Storage error notice: `card-soft-tinted` with an alert icon, black heading and message, and a secondary "Try again" pill. Announced with `role="alert"`. | Reuses D4. The plan asks for a recoverable error that never traps the user. | 2 |
+| D19 | Live GPS accuracy is shown as a 52px/700 display number ("±14 m") on the saving screen. | Uses the `display-xxl` token. Accuracy is the one fact the user needs while waiting. | 3 |
+| D20 | "Active spot" is a small black pill badge (`badge--ink`) at the top of the active card. History items will use the `canvas-soft` badge "Past record". | Plan section 5: active versus past must be clearly distinct without a second colour. | 3 |
+| D21 | Full-screen flow steps (explainer, saving, problem, manual entry) hide the tab bar and put actions at the bottom: one black primary, a secondary outline, a subtle Cancel. | Keeps one black pill per screen and puts actions in thumb reach. | 3 |
+| D22 | Tabs that are not built yet open a `card-soft-tinted` card that says "Not built yet". | Plan rule: every button works or is clearly marked unavailable. Removed when the screens ship. | 3 |
 
 ## To record as they arise
 

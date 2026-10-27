@@ -228,3 +228,40 @@
 
 /* ---------- Icons ---------- */
 .icon { flex: none; width: 20px; height: 20px; }
+
+/* ---------- Screen layout ---------- */
+.screen {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  max-width: var(--container-max);
+  min-height: 100vh;
+  min-height: 100dvh;
+  margin: 0 auto;
+  padding: var(--space-2xl) var(--space-lg) var(--space-2xl);
+}
+.screen--with-tabs { padding-bottom: 112px; }
+.screen__spacer { flex: 1; }
+.stack { display: flex; flex-direction: column; gap: var(--space-md); }
+.stack--lg { gap: var(--space-lg); }
+.row-meta { display: flex; flex-direction: column; gap: var(--space-xxs); }
+
+.accuracy {
+  font: 700 52px/64px var(--font-display);
+  font-feature-settings: 'ss01';
+  letter-spacing: normal;
+}
+.badge {
+  align-self: flex-start;
+  padding: var(--space-xxs) var(--space-md);
+  border-radius: var(--radius-pill);
+  background: var(--color-canvas-soft);
+  font: 500 14px/20px var(--font-text);
+}
+.badge--ink { background: var(--color-primary); color: var(--color-on-primary); }
+.status-line {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  font: 500 14px/20px var(--font-text);
+}
