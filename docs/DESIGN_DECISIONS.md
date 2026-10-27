@@ -30,6 +30,10 @@ This is a style match only. No Uber name, logo or artwork is used.
 | D20 | "Active spot" is a small black pill badge (`badge--ink`) at the top of the active card. History items will use the `canvas-soft` badge "Past record". | Plan section 5: active versus past must be clearly distinct without a second colour. | 3 |
 | D21 | Full-screen flow steps (explainer, saving, problem, manual entry) hide the tab bar and put actions at the bottom: one black primary, a secondary outline, a subtle Cancel. | Keeps one black pill per screen and puts actions in thumb reach. | 3 |
 | D22 | Tabs that are not built yet open a `card-soft-tinted` card that says "Not built yet". | Plan rule: every button works or is clearly marked unavailable. Removed when the screens ship. | 3 |
+| D23 | Details sheet actions sit in a sticky bottom bar: white canvas, hairline top border, black "Done" and a subtle "Skip for now" or "Cancel". | The sheet scrolls on small phones, and the primary action must stay in reach. Reuses the tab bar's hairline. | 4 |
+| D24 | Photos show in a 4:3 frame with a 16px radius, on `canvas-soft` while empty, cropped with `object-fit: cover`. The active card puts the photo first, then the clues. | Plan section 5 (4:3 imagery in card chrome). Recognition by photo beats reading coordinates. | 4 |
+| D25 | Clues (floor, zone, row, bay) are a small grid of 12px grey labels over 16px/500 black values. Empty clues are not shown. | Uses the caption and body-md-strong tokens. No new styles. | 4 |
+| D26 | Photo problems use the same error pattern as D4 (icon + black text, `role="alert"`) and sit under the photo buttons. | Never colour-only, and never blocks saving. | 4 |
 
 ## To record as they arise
 

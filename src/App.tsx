@@ -3,10 +3,11 @@ import { HistoryIcon, HomeIcon, SettingsIcon } from './components/Icons'
 import { TabBar } from './components/TabBar'
 import { Toast, ToastRegion } from './components/Toast'
 import { requestPersistence } from './data/db'
-import { getActive, undoSave, updateSpot } from './data/records'
+import { getActive, getRecord, undoSave, updateSpot } from './data/records'
 import type { ParkingRecord } from './data/types'
 import { reverseGeocode } from './lib/geocode'
 import ComingSoon from './screens/ComingSoon'
+import DetailsSheet from './screens/DetailsSheet'
 import Home from './screens/Home'
 import Onboarding from './screens/Onboarding'
 import SaveFlow from './screens/SaveFlow'
@@ -46,6 +47,8 @@ function Main() {
   const [active, setActive] = useState<ParkingRecord | null>(null)
   const [loaded, setLoaded] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [details, setDetails] = useState<{ fresh: boolean } | null>(null)
+  const pendingToast = useRef<ToastState>(null)
   const [toast, setToast] = useState<ToastState>(null)
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -74,15 +77,20 @@ function Main() {
     ({ record, archived }: SaveResult) => {
       setActive(record)
       setSaving(false)
-      showToast({
+      // The details sheet opens first; the Undo toast starts when it closes, so its 8 s are not used up while typing.
+      pendingToast.current = {
         message: archived ? 'Spot saved. Previous spot moved to history.' : 'Spot saved.',
         undo: archived ? { newId: record.id, archivedId: archived.id } : undefined,
-      })
+      }
+      setDetails({ fresh: true })
       void requestPersistence()
       if (record.latitude !== null && record.longitude !== null && !record.locationLabel) {
         void reverseGeocode(record.latitude, record.longitude).then(async (label) => {
           if (!label) return
           try {
+            // The user may have typed their own name while we waited: never overwrite it.
+            const current = await getRecord(record.id)
+            if (!current || current.locationLabel) return
             await updateSpot(record.id, { locationLabel: label })
             await refresh()
           } catch {
@@ -91,8 +99,16 @@ function Main() {
         })
       }
     },
-    [refresh, showToast],
+    [refresh],
   )
+
+  function closeDetails(updated: ParkingRecord | null) {
+    if (updated) setActive(updated)
+    const fresh = details?.fresh
+    setDetails(null)
+    if (fresh && pendingToast.current) showToast(pendingToast.current)
+    pendingToast.current = null
+  }
 
   async function undo(u: { newId: string; archivedId: string }) {
     showToast(null)
@@ -115,13 +131,18 @@ function Main() {
   if (!loaded) return null
 
   if (saving) return <SaveFlow onClose={() => setSaving(false)} onSaved={handleSaved} />
+  if (details && active) {
+    return <DetailsSheet key={active.id} record={active} fresh={details.fresh} onDone={closeDetails} />
+  }
   if (!onboarded && !active) return <Onboarding onDone={finishOnboarding} />
 
   const tab = route === '#/history' ? 'history' : route === '#/settings' ? 'settings' : 'home'
 
   return (
     <>
-      {tab === 'home' && <Home active={active} onSave={() => setSaving(true)} />}
+      {tab === 'home' && (
+        <Home active={active} onSave={() => setSaving(true)} onEdit={() => setDetails({ fresh: false })} />
+      )}
       {tab === 'history' && <ComingSoon title="History" />}
       {tab === 'settings' && <ComingSoon title="Settings" />}
 

@@ -84,6 +84,7 @@
 }
 .field__control::placeholder { color: var(--color-body); opacity: 1; }
 .field__control--on-soft { background: var(--color-canvas-softer); }
+.field__control--area { resize: vertical; min-height: 96px; }
 .field__hint { color: var(--color-body); font: 400 14px/20px var(--font-text); }
 /* errors: black text + icon + hairline, never colour-only */
 .field--error .field__control { box-shadow: inset 0 0 0 2px var(--color-ink); }
@@ -259,6 +260,32 @@
   font: 500 14px/20px var(--font-text);
 }
 .badge--ink { background: var(--color-primary); color: var(--color-on-primary); }
+/* ---------- Details sheet and photo ---------- */
+.sheet-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  margin: var(--space-lg) calc(var(--space-lg) * -1) calc(var(--space-2xl) * -1);
+  padding: var(--space-md) var(--space-lg) calc(var(--space-lg) + env(safe-area-inset-bottom));
+  background: var(--color-canvas);
+  border-top: 1px solid var(--color-surface-pressed);
+}
+.photo-frame {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--radius-xl);
+  background: var(--color-canvas-soft);
+  overflow: hidden;
+}
+.photo-frame img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.photo-actions { display: flex; flex-wrap: wrap; gap: var(--space-md); }
+.photo-actions > .btn { flex: 1 1 140px; }
+.clues { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: var(--space-md); margin: 0; }
+.clues dt { color: var(--color-body); font: 400 12px/20px var(--font-text); }
+.clues dd { margin: 0; font: 500 16px/20px var(--font-text); overflow-wrap: anywhere; }
 .status-line {
   display: flex;
   align-items: flex-start;
