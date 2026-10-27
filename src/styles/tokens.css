@@ -1,0 +1,46 @@
+/* Design tokens — source: docs/DESIGN-uber.md (style match only). */
+:root {
+  /* colour */
+  --color-primary: #000000;
+  --color-on-primary: #ffffff;
+  --color-ink: #000000;
+  --color-body: #5e5e5e;
+  --color-mute: #afafaf; /* decoration only: ~2.2:1 on white, fails WCAG */
+  --color-hairline-mid: #4b4b4b;
+  --color-canvas: #ffffff;
+  --color-canvas-soft: #efefef;
+  --color-canvas-softer: #f3f3f3;
+  --color-surface-pressed: #e2e2e2;
+  --color-black-elevated: #282828;
+  --color-on-dark: #ffffff;
+
+  /* typography */
+  --font-display: 'Inter', system-ui, 'Helvetica Neue', Arial, sans-serif;
+  --font-text: 'Inter', system-ui, 'Helvetica Neue', Arial, sans-serif;
+
+  /* radius */
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-pill: 999px;
+  --radius-pill-tab: 36px;
+
+  /* spacing */
+  --space-xxs: 4px;
+  --space-xs: 6px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 20px;
+  --space-2xl: 24px;
+  --space-3xl: 32px;
+
+  /* elevation */
+  --shadow-1: rgba(0, 0, 0, 0.12) 0px 4px 16px 0px;
+  --shadow-2: rgba(0, 0, 0, 0.16) 0px 4px 16px 0px;
+  --shadow-3: rgba(0, 0, 0, 0.16) 0px 2px 8px 0px;
+
+  /* layout */
+  --touch-min: 44px;
+  --container-max: 560px;
+}
