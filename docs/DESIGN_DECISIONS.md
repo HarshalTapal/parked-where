@@ -25,6 +25,7 @@ This is a style match only. No Uber name, logo or artwork is used.
 | D15 | Icons are inline 24px SVG line icons (2px stroke, round caps), drawn in this repo. | The file defines no icon set. No third-party icon library, no Uber artwork. | 1 |
 | D16 | Illustrations are 4:3 SVGs in black, white and `#e2e2e2` only, set inside a `canvas-soft` empty-state card. | Plan section 5: monochrome 4:3 illustrations. | 1 |
 | D17 | Content container caps at 560px and centres on desktop. | The file's ~1200px marketing container is too wide for a phone-first utility. | 1 |
+| D18 | Storage error notice: `card-soft-tinted` with an alert icon, black heading and message, and a secondary "Try again" pill. Announced with `role="alert"`. | Reuses D4. The plan asks for a recoverable error that never traps the user. | 2 |
 
 ## To record as they arise
 

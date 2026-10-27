@@ -2,6 +2,7 @@ import { Suspense, lazy, useEffect, useState } from 'react'
 
 // The kit page is dev-only: the dynamic import is dropped from production builds.
 const Kit = import.meta.env.DEV ? lazy(() => import('./screens/Kit')) : null
+const DataLab = import.meta.env.DEV ? lazy(() => import('./screens/DataLab')) : null
 
 function useHashRoute() {
   const [hash, setHash] = useState(window.location.hash)
@@ -20,6 +21,14 @@ export default function App() {
     return (
       <Suspense fallback={null}>
         <Kit />
+      </Suspense>
+    )
+  }
+
+  if (DataLab && route === '#/data') {
+    return (
+      <Suspense fallback={null}>
+        <DataLab />
       </Suspense>
     )
   }
