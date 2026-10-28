@@ -14,11 +14,16 @@ afterEach(() => injectStorageFailure(null))
 const gps = { latitude: 12.97, longitude: 77.59, locationAccuracyMeters: 8, locationSource: 'gps' as const }
 const bytes = (...n: number[]) => new Blob([new Uint8Array(n)], { type: 'image/jpeg' })
 
+// Records are ordered by timestamp, and real saves are never in the same millisecond.
+const tick = () => new Promise((resolve) => setTimeout(resolve, 5))
+
 async function seedThree() {
   const a = (await createSpot({ ...gps, locationLabel: 'A', floorLevel: 'B1', notes: 'note' })).record
   await setPhoto(a.id, bytes(255, 216, 255, 1, 2, 3))
+  await tick()
   const b = (await createSpot({ locationSource: 'manual', locationLabel: 'B typed' })).record
-  const c = (await createSpot({ ...gps, locationLabel: 'C', zone: 'Blue' })).record
+  await tick()
+  const c =(await createSpot({ ...gps, locationLabel: 'C', zone: 'Blue' })).record
   await setPhoto(c.id, bytes(9, 8, 7, 6))
   return { a, b, c }
 }

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useOnline } from '../lib/useOnline'
 import type { MapHandle } from '../lib/leafletMap'
+import { Button } from './Button'
 import { MapOfflineArt } from './Illustrations'
 
 type Props = {
@@ -25,6 +26,7 @@ export function MapPanel({ latitude, longitude, accuracyMeters, title, draggable
   const handle = useRef<MapHandle | null>(null)
   const [status, setStatus] = useState<Status>('loading')
   const [tilesFailed, setTilesFailed] = useState(false)
+  const [attempt, setAttempt] = useState(0)
 
   // Created once with the starting position; later position changes go through setPin below.
   const start = useRef({ latitude, longitude, accuracyMeters, draggable, title, onMove })
@@ -50,7 +52,8 @@ export function MapPanel({ latitude, longitude, accuracyMeters, title, draggable
         })
         setStatus('ready')
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error('Map failed to start', err)
         if (live) setStatus('failed')
       })
     return () => {
@@ -60,7 +63,7 @@ export function MapPanel({ latitude, longitude, accuracyMeters, title, draggable
       setStatus('loading')
       setTilesFailed(false)
     }
-  }, [online])
+  }, [online, attempt])
 
   useEffect(() => {
     start.current.onMove = onMove
@@ -84,6 +87,11 @@ export function MapPanel({ latitude, longitude, accuracyMeters, title, draggable
           </div>
           <p className="t-body-md-strong">{problem === 'offline' ? 'Map unavailable offline' : 'The map could not load'}</p>
           <p className="t-body-sm t-secondary">Your saved details and coordinates are still shown on this screen.</p>
+          {problem !== 'offline' && (
+            <Button variant="secondary" onClick={() => setAttempt((n) => n + 1)} data-testid="map-retry">
+              Try again
+            </Button>
+          )}
         </div>
       )}
       {!problem && status === 'loading' && (

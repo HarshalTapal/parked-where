@@ -4,6 +4,7 @@ import { Card } from '../components/Card'
 import { Chip } from '../components/Chip'
 import { AlertIcon, CameraIcon, PinIcon } from '../components/Icons'
 import { Input } from '../components/Input'
+import { MapPanel } from '../components/MapPanel'
 import { Modal } from '../components/Modal'
 import { StorageErrorNotice } from '../components/StorageErrorNotice'
 import { Textarea } from '../components/Textarea'
@@ -158,6 +159,33 @@ export default function DetailsSheet({ record, fresh, onDone }: Props) {
         )}
       </div>
 
+      {hasCoords && (
+        <section className="stack" aria-labelledby="where-h" data-testid="sheet-map">
+          <h2 id="where-h" className="t-body-md-strong">
+            Where we saved it
+          </h2>
+          <MapPanel
+            latitude={(pinned ?? record).latitude!}
+            longitude={(pinned ?? record).longitude!}
+            accuracyMeters={(pinned ?? record).locationAccuracyMeters}
+            title="Saved parking location"
+          />
+          <p className="t-body-sm t-secondary">
+            Compare this with where you actually are. If the pin is off, move it.
+          </p>
+          <div>
+            <Button variant="secondary" onClick={() => setAdjusting(true)} data-testid="adjust-from-sheet">
+              <PinIcon /> Adjust pin on map
+            </Button>
+          </div>
+          {pinned && (
+            <p className="t-body-sm t-secondary" role="status" data-testid="pin-updated">
+              Pin moved and saved.
+            </p>
+          )}
+        </section>
+      )}
+
       <section className="stack" aria-labelledby="floor-h">
         <h2 id="floor-h" className="t-body-md-strong">
           Floor or level
@@ -273,20 +301,6 @@ export default function DetailsSheet({ record, fresh, onDone }: Props) {
           hint={hasCoords ? 'Looked up from the map when possible. Edit it if it is wrong.' : 'Where you parked.'}
           onChange={(e) => setLabelDraft(e.target.value)}
         />
-        {hasCoords && (
-          <div className="stack">
-            <div>
-              <Button variant="secondary" onClick={() => setAdjusting(true)} data-testid="adjust-from-sheet">
-                <PinIcon /> Adjust pin on map
-              </Button>
-            </div>
-            {pinned && (
-              <p className="t-body-sm t-secondary" role="status" data-testid="pin-updated">
-                Pin moved and saved.
-              </p>
-            )}
-          </div>
-        )}
       </section>
 
       {saveError && <StorageErrorNotice message={saveError} onRetry={() => void save()} />}

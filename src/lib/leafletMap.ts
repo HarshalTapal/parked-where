@@ -34,8 +34,26 @@ export type MapHandle = {
 export function createMap(el: HTMLElement, o: MapOptions): MapHandle {
   const map = L.map(el, { zoomControl: true, attributionControl: true })
   const tiles = L.tileLayer(TILE_URL, { maxZoom: 19, attribution: ATTRIBUTION })
+  // A tile that fails once (a network blip, a busy tile server) is asked for again a few times.
+  // Leaflet itself never retries, so without this one early failure leaves a grey hole for good.
+  const RETRY_DELAYS_MS = [1000, 2500, 5000]
+  const retries = new WeakMap<HTMLImageElement, number>()
+  const timers = new Set<number>()
   tiles.on('tileload', () => o.onTileLoad?.())
-  tiles.on('tileerror', () => o.onTileError?.())
+  tiles.on('tileerror', (e: L.TileErrorEvent) => {
+    const tile = e.tile as HTMLImageElement
+    const tried = retries.get(tile) ?? 0
+    if (tried >= RETRY_DELAYS_MS.length) {
+      o.onTileError?.()
+      return
+    }
+    retries.set(tile, tried + 1)
+    const timer = window.setTimeout(() => {
+      timers.delete(timer)
+      if (tile.isConnected) tile.src = tiles.getTileUrl(e.coords)
+    }, RETRY_DELAYS_MS[tried])
+    timers.add(timer)
+  })
   tiles.addTo(map)
 
   const start = L.latLng(o.latitude, o.longitude)
@@ -58,7 +76,9 @@ export function createMap(el: HTMLElement, o: MapOptions): MapHandle {
     }).addTo(map)
   }
 
-  if (circle && o.accuracyMeters! > 60) map.fitBounds(circle.getBounds(), { maxZoom: 17, padding: [24, 24] })
+  // Bounds come from the position, not circle.getBounds(): a circle cannot report its bounds
+  // before the map has a view, which used to crash the whole map for any fix worse than 60 m.
+  if (circle && o.accuracyMeters! > 60) map.fitBounds(start.toBounds(o.accuracyMeters! * 2), { maxZoom: 17, padding: [24, 24] })
   else map.setView(start, 17)
 
   // Once the pin is moved by hand the GPS accuracy circle no longer applies.
@@ -90,6 +110,7 @@ export function createMap(el: HTMLElement, o: MapOptions): MapHandle {
       if (!map.getBounds().contains(next)) map.panTo(next)
     },
     destroy() {
+      timers.forEach((t) => window.clearTimeout(t))
       map.remove()
     },
   }
