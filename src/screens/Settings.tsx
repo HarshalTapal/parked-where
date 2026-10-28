@@ -10,6 +10,8 @@ import { StorageError } from '../data/types'
 import { dateTime } from '../lib/format'
 import { getPermissionState } from '../lib/geolocation'
 import type { PermissionState } from '../lib/geolocation'
+import { getOfflineStatus, isStandalone, promptInstall, usePwa } from '../lib/pwa'
+import type { OfflineStatus } from '../lib/pwa'
 
 type Props = {
   /** Called after import or delete-all so Home and History reload. */
@@ -126,6 +128,26 @@ export default function Settings({ onDataChanged }: Props) {
       window.removeEventListener('focus', read)
     }
   }, [])
+
+  const { canInstall } = usePwa()
+  const [offline, setOffline] = useState<OfflineStatus | null>(null)
+  const [installNote, setInstallNote] = useState<string | null>(null)
+  const standalone = isStandalone()
+
+  useEffect(() => {
+    let live = true
+    getOfflineStatus().then((s) => live && setOffline(s))
+    return () => {
+      live = false
+    }
+  }, [])
+
+  async function install() {
+    const result = await promptInstall()
+    if (result === 'dismissed') setInstallNote('Installation was cancelled. You can try again any time.')
+    else if (result === 'accepted') setInstallNote('Installing. Look for the app icon on your device.')
+    else setInstallNote('Your browser did not offer to install. Use the steps below instead.')
+  }
 
   async function askPersistence() {
     const result = await requestPersistence()
@@ -324,6 +346,54 @@ export default function Settings({ onDataChanged }: Props) {
               <li>Reload the page.</li>
             </ol>
           </details>
+        </div>
+      </Card>
+
+      {/* ---------- Install and offline ---------- */}
+      <Card variant="content" data-testid="install-card">
+        <div className="stack">
+          <h2 className="t-display-sm">Install and offline</h2>
+          <p className="t-body-md" data-testid="offline-status">
+            {offline === null && 'Checking…'}
+            {offline === 'ready' &&
+              'Ready for offline use. The app is saved on this device, so it opens without internet. Maps and address lookup still need internet.'}
+            {offline === 'not-yet' &&
+              'Not saved for offline use yet. Open the app once while you are online and wait a few seconds.'}
+            {offline === 'unsupported' &&
+              'This browser cannot save the app for offline use. Your saved spots are still stored on this device.'}
+          </p>
+          {standalone ? (
+            <p className="t-body-md" data-testid="install-status">
+              You are using the installed app.
+            </p>
+          ) : (
+            <>
+              <p className="t-body-md">
+                Installing gives the app its own icon and opens it full screen. On iPhone it can also make Safari less
+                likely to clear your saved data.
+              </p>
+              {canInstall && (
+                <div>
+                  <Button variant="secondary" onClick={() => void install()} data-testid="install-btn">
+                    Install app
+                  </Button>
+                </div>
+              )}
+              {installNote && (
+                <p className="t-body-sm" role="status" data-testid="install-note">
+                  {installNote}
+                </p>
+              )}
+              <details className="disclosure">
+                <summary>How to install on a phone</summary>
+                <ol className="steps t-body-md">
+                  <li>iPhone or iPad: open this page in Safari, tap the Share button, then Add to Home Screen.</li>
+                  <li>Android: in Chrome, open the menu (three dots), then tap Install app or Add to Home screen.</li>
+                  <li>Computer (Chrome or Edge): use the install icon at the right of the address bar.</li>
+                </ol>
+              </details>
+            </>
+          )}
         </div>
       </Card>
 

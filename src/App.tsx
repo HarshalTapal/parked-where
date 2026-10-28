@@ -1,5 +1,6 @@
 import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react'
 import { HistoryIcon, HomeIcon, SettingsIcon } from './components/Icons'
+import { StatusBanners } from './components/StatusBanners'
 import { TabBar } from './components/TabBar'
 import { Toast, ToastRegion } from './components/Toast'
 import { requestPersistence } from './data/db'
@@ -292,5 +293,10 @@ export default function App() {
       </Suspense>
     )
   }
-  return <Main />
+  return (
+    <>
+      <StatusBanners />
+      <Main />
+    </>
+  )
 }

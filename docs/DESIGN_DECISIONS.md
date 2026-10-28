@@ -49,6 +49,10 @@ This is a style match only. No Uber name, logo or artwork is used.
 | D39 | Per-OS location help is native `<details>` disclosures, collapsed by default, with a 44px summary row and a hairline divider. | Long help text stays out of the way and is keyboard and screen-reader accessible with no extra code. | 7 |
 | D40 | The restore preview is a `card-soft-tinted` inside the backup card, with an outline "Add these records" and a subtle Cancel. Results and errors are one status line each (icon + black text, `role="alert"` for errors). | Reuses D4 and D18. Nothing is written until the user confirms. | 7 |
 | D41 | The "Not built yet" placeholder (D22) is removed now that every tab is real. | D22 said to remove it when the screens ship. | 7 |
+| D42 | The app icon is a black tile with the white map pin from the in-app icon set (D15), centre dot black. Three renders: rounded "any" (192, 512), full-bleed maskable (512, pin inside the safe zone), full-bleed Apple touch icon (180). The favicon is the rounded version. Sources are in `design/icons/`. | Black and white only, matching the rest of the UI, drawn in this repo with no outside artwork. Replaces the template's purple favicon. | 8 |
+| D43 | The offline and update notices are full-width strips under the top edge: `canvas-soft` background, hairline bottom border, 14px/500 black text, sticky while scrolling. Offline text is short enough for two lines on a 360px phone. The update strip adds an outline "Update now" pill. | Reuses the status-line pattern (D4/D32). Notices must be seen without blocking anything, and must not eat a small screen. | 8 |
+| D44 | `theme_color` and `background_color` are white (`canvas`). | The app is a white canvas with black ink, so the system bar and splash screen match it. | 8 |
+| D45 | Settings gets an "Install and offline" `card-content` card: one status sentence for offline readiness, then either an outline "Install app" pill (only when the browser offers one), "You are using the installed app.", or collapsed how-to steps. | Reuses D38/D39. No fake install button where a browser offers no install prompt (iPhone Safari). | 8 |
 
 ## To record as they arise
 
