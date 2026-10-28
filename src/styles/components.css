@@ -336,3 +336,21 @@
   gap: var(--space-sm);
   font: 500 14px/20px var(--font-text);
 }
+/* ---------- History ---------- */
+.history-list { display: flex; flex-direction: column; gap: var(--space-md); margin: 0; padding: 0; list-style: none; }
+.history-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  min-height: var(--touch-min);
+  padding: var(--space-lg);
+  border-radius: var(--radius-xl);
+  background: var(--color-canvas);
+  box-shadow: inset 0 0 0 1px var(--color-surface-pressed);
+  color: var(--color-ink);
+  text-decoration: none;
+}
+.history-item:active { background: var(--color-canvas-soft); }
+.history-item__title { overflow-wrap: anywhere; }
+.history-item__meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-xs); }
+.history-item__meta .icon { width: 16px; height: 16px; }

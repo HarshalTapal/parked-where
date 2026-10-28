@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Button } from '../components/Button'
 import { Card } from '../components/Card'
 import { Chip } from '../components/Chip'
-import { AlertIcon, CameraIcon } from '../components/Icons'
+import { AlertIcon, CameraIcon, PinIcon } from '../components/Icons'
 import { Input } from '../components/Input'
 import { Modal } from '../components/Modal'
 import { StorageErrorNotice } from '../components/StorageErrorNotice'
@@ -15,6 +15,7 @@ import { formatAccuracy } from '../lib/format'
 import { isApproximate } from '../lib/geolocation'
 import { PhotoError, downscaleImage } from '../lib/photo'
 import { usePhotoUrl } from '../lib/usePhotoUrl'
+import AdjustPin from './AdjustPin'
 
 type Props = {
   record: ParkingRecord
@@ -41,6 +42,9 @@ export default function DetailsSheet({ record, fresh, onDone }: Props) {
   const [processing, setProcessing] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [confirmDiscard, setConfirmDiscard] = useState(false)
+  // The pin is saved on its own screen. The sheet stays mounted underneath, so nothing typed is lost.
+  const [adjusting, setAdjusting] = useState(false)
+  const [pinned, setPinned] = useState<ParkingRecord | null>(null)
 
   const storedUrl = usePhotoUrl(record.id, record.hasPhoto, record.updatedAt)
   const photoUrl = photo.kind === 'new' ? photo.url : photo.kind === 'removed' ? null : storedUrl
@@ -93,7 +97,7 @@ export default function DetailsSheet({ record, fresh, onDone }: Props) {
       if (notes !== record.notes) patch.notes = notes
       if (labelDraft !== null) patch.locationLabel = labelDraft
 
-      let updated = record
+      let updated = pinned ?? record
       if (Object.keys(patch).length > 0) updated = await updateSpot(record.id, patch)
       if (photo.kind === 'new') updated = await setPhoto(record.id, photo.blob)
       else if (photo.kind === 'removed' && record.hasPhoto) updated = (await removePhoto(record.id)) ?? updated
@@ -112,9 +116,23 @@ export default function DetailsSheet({ record, fresh, onDone }: Props) {
     }
   }
 
+  // A moved pin is already stored, so closing without saving the rest still reports it.
   function leave() {
     if (dirty) setConfirmDiscard(true)
-    else onDone(null)
+    else onDone(pinned)
+  }
+
+  if (adjusting) {
+    return (
+      <AdjustPin
+        record={pinned ?? record}
+        onBack={() => setAdjusting(false)}
+        onSaved={(updated) => {
+          setPinned(updated)
+          setAdjusting(false)
+        }}
+      />
+    )
   }
 
   const hasCoords = record.latitude !== null
@@ -255,6 +273,20 @@ export default function DetailsSheet({ record, fresh, onDone }: Props) {
           hint={hasCoords ? 'Looked up from the map when possible. Edit it if it is wrong.' : 'Where you parked.'}
           onChange={(e) => setLabelDraft(e.target.value)}
         />
+        {hasCoords && (
+          <div className="stack">
+            <div>
+              <Button variant="secondary" onClick={() => setAdjusting(true)} data-testid="adjust-from-sheet">
+                <PinIcon /> Adjust pin on map
+              </Button>
+            </div>
+            {pinned && (
+              <p className="t-body-sm t-secondary" role="status" data-testid="pin-updated">
+                Pin moved and saved.
+              </p>
+            )}
+          </div>
+        )}
       </section>
 
       {saveError && <StorageErrorNotice message={saveError} onRetry={() => void save()} />}
@@ -277,7 +309,7 @@ export default function DetailsSheet({ record, fresh, onDone }: Props) {
             <Button block onClick={() => setConfirmDiscard(false)}>
               Keep editing
             </Button>
-            <Button block variant="secondary" onClick={() => onDone(null)}>
+            <Button block variant="secondary" onClick={() => onDone(pinned)}>
               Discard
             </Button>
           </>

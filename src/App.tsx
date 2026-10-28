@@ -3,13 +3,15 @@ import { HistoryIcon, HomeIcon, SettingsIcon } from './components/Icons'
 import { TabBar } from './components/TabBar'
 import { Toast, ToastRegion } from './components/Toast'
 import { requestPersistence } from './data/db'
-import { getActive, getRecord, undoSave, updateSpot } from './data/records'
-import type { ParkingRecord } from './data/types'
+import { getActive, getRecord, restoreSpot, undoSave, updateSpot } from './data/records'
+import type { DeletedSpot, ParkingRecord } from './data/types'
 import { reverseGeocode } from './lib/geocode'
 import ComingSoon from './screens/ComingSoon'
 import AdjustPin from './screens/AdjustPin'
 import DetailsSheet from './screens/DetailsSheet'
 import FindVehicle from './screens/FindVehicle'
+import History from './screens/History'
+import HistoryDetail from './screens/HistoryDetail'
 import Home from './screens/Home'
 import Onboarding from './screens/Onboarding'
 import SaveFlow from './screens/SaveFlow'
@@ -39,7 +41,7 @@ function useHashRoute() {
   return hash
 }
 
-type ToastState = { message: string; undo?: { newId: string; archivedId: string } } | null
+type ToastState = { message: string; undo?: () => Promise<void> } | null
 
 const TOAST_MS = 8000
 
@@ -50,6 +52,11 @@ function Main() {
   const [loaded, setLoaded] = useState(false)
   const [saving, setSaving] = useState(false)
   const [details, setDetails] = useState<{ fresh: boolean } | null>(null)
+  // A past record being edited from History. Separate from `details`, which always edits the active spot.
+  const [editing, setEditing] = useState<ParkingRecord | null>(null)
+  // Bumped whenever history may have changed, so the History screens reload.
+  const [historyVersion, setHistoryVersion] = useState(0)
+  const bumpHistory = useCallback(() => setHistoryVersion((n) => n + 1), [])
   const pendingToast = useRef<ToastState>(null)
   const [toast, setToast] = useState<ToastState>(null)
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -74,6 +81,19 @@ function Main() {
     if (next) toastTimer.current = setTimeout(() => setToast(null), TOAST_MS)
   }, [])
 
+  const undo = useCallback(
+    async (newId: string, archivedId: string | null) => {
+      showToast(null)
+      try {
+        await undoSave(newId, archivedId)
+      } finally {
+        await refresh()
+        bumpHistory()
+      }
+    },
+    [refresh, showToast, bumpHistory],
+  )
+
   // Runs after the record is already stored, so none of this can block or lose a save.
   const handleSaved = useCallback(
     ({ record, archived }: SaveResult) => {
@@ -82,8 +102,9 @@ function Main() {
       // The details sheet opens first; the Undo toast starts when it closes, so its 8 s are not used up while typing.
       pendingToast.current = {
         message: archived ? 'Spot saved. Previous spot moved to history.' : 'Spot saved.',
-        undo: archived ? { newId: record.id, archivedId: archived.id } : undefined,
+        undo: archived ? () => undo(record.id, archived.id) : undefined,
       }
+      bumpHistory()
       setDetails({ fresh: true })
       void requestPersistence()
       if (record.latitude !== null && record.longitude !== null && !record.locationLabel) {
@@ -101,7 +122,7 @@ function Main() {
         })
       }
     },
-    [refresh],
+    [refresh, undo, bumpHistory],
   )
 
   function closeDetails(updated: ParkingRecord | null) {
@@ -112,13 +133,37 @@ function Main() {
     pendingToast.current = null
   }
 
-  async function undo(u: { newId: string; archivedId: string }) {
-    showToast(null)
-    try {
-      await undoSave(u.newId, u.archivedId)
-    } finally {
-      await refresh()
-    }
+  function afterReuse({ record, archived }: { record: ParkingRecord; archived: ParkingRecord | null }) {
+    setActive(record)
+    bumpHistory()
+    window.location.hash = '#/'
+    showToast({
+      message: archived ? 'Now your current spot. Previous spot moved to history.' : 'Now your current spot.',
+      undo: () => undo(record.id, archived?.id ?? null),
+    })
+    void requestPersistence()
+  }
+
+  function afterDelete(deleted: DeletedSpot) {
+    bumpHistory()
+    window.location.hash = '#/history'
+    showToast({
+      message: 'Record deleted.',
+      undo: async () => {
+        showToast(null)
+        try {
+          await restoreSpot(deleted)
+        } finally {
+          await refresh()
+          bumpHistory()
+        }
+      },
+    })
+  }
+
+  function closeEditing(updated: ParkingRecord | null) {
+    setEditing(null)
+    if (updated) bumpHistory()
   }
 
   function finishOnboarding() {
@@ -135,6 +180,9 @@ function Main() {
   if (saving) return <SaveFlow onClose={() => setSaving(false)} onSaved={handleSaved} />
   if (details && active) {
     return <DetailsSheet key={active.id} record={active} fresh={details.fresh} onDone={closeDetails} />
+  }
+  if (editing) {
+    return <DetailsSheet key={editing.id} record={editing} fresh={false} onDone={closeEditing} />
   }
   if (!onboarded && !active) return <Onboarding onDone={finishOnboarding} />
 
@@ -166,7 +214,8 @@ function Main() {
     )
   }
 
-  const tab = route === '#/history' ? 'history' : route === '#/settings' ? 'settings' : 'home'
+  const historyId = route.startsWith('#/history/') ? decodeURIComponent(route.slice('#/history/'.length)) : null
+  const tab = route.startsWith('#/history') ? 'history' : route === '#/settings' ? 'settings' : 'home'
 
   return (
     <>
@@ -178,7 +227,19 @@ function Main() {
           onFind={() => (window.location.hash = '#/find')}
         />
       )}
-      {tab === 'history' && <ComingSoon title="History" />}
+      {tab === 'history' && !historyId && <History version={historyVersion} />}
+      {tab === 'history' && historyId && (
+        <HistoryDetail
+          key={historyId}
+          id={historyId}
+          version={historyVersion}
+          hasActive={active !== null}
+          onBack={() => (window.location.hash = '#/history')}
+          onEdit={setEditing}
+          onReused={afterReuse}
+          onDeleted={afterDelete}
+        />
+      )}
       {tab === 'settings' && <ComingSoon title="Settings" />}
 
       {toast && (
@@ -186,7 +247,7 @@ function Main() {
           <Toast
             message={toast.message}
             actionLabel={toast.undo ? 'Undo' : undefined}
-            onAction={toast.undo ? () => void undo(toast.undo!) : undefined}
+            onAction={toast.undo ? () => void toast.undo!() : undefined}
           />
         </ToastRegion>
       )}

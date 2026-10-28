@@ -11,6 +11,7 @@ import {
   listHistory,
   removePhoto,
   restoreSpot,
+  reuseSpot,
   setPhoto,
   undoSave,
   updateSpot,
@@ -302,5 +303,74 @@ describe('storage failures', () => {
     } finally {
       globalThis.indexedDB = saved
     }
+  })
+})
+
+describe('reusing a past record', () => {
+  it('copies details and photo into a new active spot and leaves the past record alone', async () => {
+    const { record: old } = await createSpot({ ...gps, floorLevel: 'B2', row: 'C', notes: 'by the lift', locationLabel: 'City Mall' })
+    await setPhoto(old.id, new Blob(['pic'], { type: 'image/jpeg' }))
+    await endActive()
+    const past = (await getRecord(old.id))!
+
+    const { record, archived } = await reuseSpot(old.id)
+    expect(archived).toBeNull()
+    expect(record.id).not.toBe(old.id)
+    expect(record.status).toBe('active')
+    expect(record.endedAt).toBeNull()
+    expect(record.createdAt >= past.createdAt).toBe(true)
+    expect(record).toMatchObject({ floorLevel: 'B2', row: 'C', notes: 'by the lift', locationLabel: 'City Mall', latitude: 12.97 })
+    expect(record.hasPhoto).toBe(true)
+    expect(await (await getPhoto(record.id))!.text()).toBe('pic')
+
+    // The source is untouched and still has its own photo.
+    expect(await getRecord(old.id)).toEqual(past)
+    expect(await (await getPhoto(old.id))!.text()).toBe('pic')
+    expect((await getActive())!.id).toBe(record.id)
+  })
+
+  it('moves the current active spot to history in the same step, and Undo brings it back', async () => {
+    const { record: old } = await createSpot({ ...gps, locationLabel: 'Old place' })
+    await endActive()
+    const { record: current } = await createSpot({ locationSource: 'manual', locationLabel: 'Current place' })
+
+    const { record, archived } = await reuseSpot(old.id)
+    expect(archived!.id).toBe(current.id)
+    expect((await getActive())!.id).toBe(record.id)
+    expect((await getRecord(current.id))!.status).toBe('history')
+
+    await undoSave(record.id, archived!.id)
+    expect((await getActive())!.id).toBe(current.id)
+    expect(await getRecord(record.id)).toBeNull()
+    expect(await getPhoto(record.id)).toBeNull()
+    expect((await getRecord(old.id))!.status).toBe('history')
+  })
+
+  it('never leaves two active records', async () => {
+    const { record: a } = await createSpot(gps)
+    await endActive()
+    await createSpot({ locationSource: 'manual', locationLabel: 'b' })
+    await reuseSpot(a.id)
+    const history = await listHistory()
+    expect(history.every((r) => r.status === 'history')).toBe(true)
+    expect(history).toHaveLength(2)
+  })
+
+  it('refuses a missing or already active record and changes nothing', async () => {
+    const { record } = await createSpot(gps)
+    await expect(reuseSpot(record.id)).rejects.toBeInstanceOf(ValidationError)
+    await expect(reuseSpot('nope')).rejects.toBeInstanceOf(ValidationError)
+    expect((await getActive())!.id).toBe(record.id)
+    expect(await listHistory()).toHaveLength(0)
+  })
+
+  it('reports a storage failure as a StorageError and changes nothing', async () => {
+    const { record: old } = await createSpot(gps)
+    await endActive()
+    injectStorageFailure('quota')
+    await expect(reuseSpot(old.id)).rejects.toBeInstanceOf(StorageError)
+    injectStorageFailure(null)
+    expect(await getActive()).toBeNull()
+    expect(await listHistory()).toHaveLength(1)
   })
 })

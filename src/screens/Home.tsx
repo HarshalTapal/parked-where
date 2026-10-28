@@ -4,7 +4,7 @@ import { EmptyState } from '../components/EmptyState'
 import { AlertIcon, PinIcon } from '../components/Icons'
 import { ParkedCarArt } from '../components/Illustrations'
 import { SpotClues } from '../components/SpotClues'
-import { clockTime, formatAccuracy, formatCoords, timeAgo } from '../lib/format'
+import { clockTime, formatAccuracy, formatCoords, spotTitle, timeAgo } from '../lib/format'
 import { isApproximate } from '../lib/geolocation'
 import { isStale, staleMessage } from '../lib/stale'
 import type { ParkingRecord } from '../data/types'
@@ -14,12 +14,6 @@ type HomeProps = {
   onSave: () => void
   onEdit: () => void
   onFind: () => void
-}
-
-function locationSummary(r: ParkingRecord): string {
-  if (r.locationLabel) return r.locationLabel
-  if (r.latitude !== null && r.longitude !== null) return 'Location saved, not named'
-  return 'No location saved'
 }
 
 function ActiveSpot({ active, onSave, onEdit, onFind }: Omit<HomeProps, 'active'> & { active: ParkingRecord }) {
@@ -43,7 +37,7 @@ function ActiveSpot({ active, onSave, onEdit, onFind }: Omit<HomeProps, 'active'
           <SpotClues record={active} />
 
           <h2 className="t-display-sm" data-testid="active-label">
-            {locationSummary(active)}
+            {spotTitle(active)}
           </h2>
 
           {hasCoords && active.locationSource === 'adjusted' && (

@@ -56,6 +56,51 @@ export async function createSpot(
   )
 }
 
+/**
+ * "Reuse as new spot": copy a past record's place, details and photo into a brand-new
+ * active spot. The past record stays in history untouched, and any current active spot
+ * moves to history in the same transaction. Returns the archived record for Undo.
+ */
+export async function reuseSpot(
+  sourceId: string,
+): Promise<{ record: ParkingRecord; archived: ParkingRecord | null }> {
+  return run(
+    async (db) => {
+      const tx = db.transaction(['records', 'photos'], 'readwrite')
+      const store = tx.objectStore('records')
+      const source = await store.get(sourceId)
+      if (!source) throw new ValidationError('That spot no longer exists.')
+      if (source.status === 'active') throw new ValidationError('That spot is already your current spot.')
+
+      const stamp = now()
+      const active = await store.index('status').getAll('active')
+      active.sort(newestFirst)
+      const archivedList: ParkingRecord[] = []
+      for (const old of active) {
+        const moved: ParkingRecord = { ...old, status: 'history', endedAt: stamp, updatedAt: stamp }
+        await store.put(moved)
+        archivedList.push(moved)
+      }
+
+      const photo = source.hasPhoto ? ((await tx.objectStore('photos').get(sourceId)) ?? null) : null
+      const record: ParkingRecord = {
+        id: crypto.randomUUID(),
+        createdAt: stamp,
+        updatedAt: stamp,
+        status: 'active',
+        endedAt: null,
+        hasPhoto: photo !== null,
+        ...pickFields(source),
+      }
+      await store.put(record)
+      if (photo) await tx.objectStore('photos').put(photo, record.id)
+      await tx.done
+      return { record, archived: archivedList[0] ?? null }
+    },
+    { write: true },
+  )
+}
+
 /** Undo a save: remove the new spot and make the previously active one active again. */
 export async function undoSave(newId: string, archivedId: string | null): Promise<ParkingRecord | null> {
   return run(
