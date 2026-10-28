@@ -6,7 +6,6 @@ import { requestPersistence } from './data/db'
 import { getActive, getRecord, restoreSpot, undoSave, updateSpot } from './data/records'
 import type { DeletedSpot, ParkingRecord } from './data/types'
 import { reverseGeocode } from './lib/geocode'
-import ComingSoon from './screens/ComingSoon'
 import AdjustPin from './screens/AdjustPin'
 import DetailsSheet from './screens/DetailsSheet'
 import FindVehicle from './screens/FindVehicle'
@@ -15,6 +14,7 @@ import HistoryDetail from './screens/HistoryDetail'
 import Home from './screens/Home'
 import Onboarding from './screens/Onboarding'
 import SaveFlow from './screens/SaveFlow'
+import Settings from './screens/Settings'
 import type { SaveResult } from './screens/SaveFlow'
 
 // Dev-only pages: the dynamic imports are dropped from production builds.
@@ -240,7 +240,15 @@ function Main() {
           onDeleted={afterDelete}
         />
       )}
-      {tab === 'settings' && <ComingSoon title="Settings" />}
+      {tab === 'settings' && (
+        <Settings
+          onDataChanged={async () => {
+            showToast(null) // an Undo for a record that may no longer exist must not linger
+            await refresh()
+            bumpHistory()
+          }}
+        />
+      )}
 
       {toast && (
         <ToastRegion>

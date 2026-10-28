@@ -45,6 +45,10 @@ This is a style match only. No Uber name, logo or artwork is used.
 | D35 | The past-record view repeats the "Past record" badge and a status line, "This is an earlier spot, not your current parking." Its one black pill is "Reuse as new spot", with Edit details as the outline button and Delete as the subtle button. | Plan Phase 6: an old record is never shown as current. Delete is the least prominent action. | 6 |
 | D36 | Reuse and Delete ask for confirmation in the standard modal (D6). The black pill is the action, the outline pill is the escape. After either, a black toast (D5) offers Undo for 8 seconds. | Both change data. Reuse replaces the current spot, so it must never happen silently. | 6 |
 | D37 | The edit sheet gets an outline "Adjust pin on map" button. The pin screen opens over the sheet without unmounting it, so unsaved text and photo changes survive. A moved pin is stored straight away and the sheet says "Pin moved and saved." | Leaving the sheet to adjust the pin would lose edits. Reuses the pin screen from Phase 5. | 6 |
+| D38 | Settings is a stack of four `card-content` cards (data and privacy, location permission, backup and restore, delete everything), each with a `display-sm` heading and body text. Only the backup download is a black pill. Restore is outline, delete is subtle. | One black pill per screen. Delete is deliberately the least prominent. Reuses D8. | 7 |
+| D39 | Per-OS location help is native `<details>` disclosures, collapsed by default, with a 44px summary row and a hairline divider. | Long help text stays out of the way and is keyboard and screen-reader accessible with no extra code. | 7 |
+| D40 | The restore preview is a `card-soft-tinted` inside the backup card, with an outline "Add these records" and a subtle Cancel. Results and errors are one status line each (icon + black text, `role="alert"` for errors). | Reuses D4 and D18. Nothing is written until the user confirms. | 7 |
+| D41 | The "Not built yet" placeholder (D22) is removed now that every tab is real. | D22 said to remove it when the screens ship. | 7 |
 
 ## To record as they arise
 
