@@ -1,17 +1,19 @@
 import { Button } from '../components/Button'
 import { Card } from '../components/Card'
 import { EmptyState } from '../components/EmptyState'
-import { PinIcon } from '../components/Icons'
+import { AlertIcon, PinIcon } from '../components/Icons'
 import { ParkedCarArt } from '../components/Illustrations'
+import { SpotClues } from '../components/SpotClues'
 import { clockTime, formatAccuracy, formatCoords, timeAgo } from '../lib/format'
 import { isApproximate } from '../lib/geolocation'
-import { usePhotoUrl } from '../lib/usePhotoUrl'
+import { isStale, staleMessage } from '../lib/stale'
 import type { ParkingRecord } from '../data/types'
 
 type HomeProps = {
   active: ParkingRecord | null
   onSave: () => void
   onEdit: () => void
+  onFind: () => void
 }
 
 function locationSummary(r: ParkingRecord): string {
@@ -20,16 +22,9 @@ function locationSummary(r: ParkingRecord): string {
   return 'No location saved'
 }
 
-function ActiveSpot({ active, onSave, onEdit }: { active: ParkingRecord; onSave: () => void; onEdit: () => void }) {
-  const photoUrl = usePhotoUrl(active.id, active.hasPhoto, active.updatedAt)
+function ActiveSpot({ active, onSave, onEdit, onFind }: Omit<HomeProps, 'active'> & { active: ParkingRecord }) {
   const hasCoords = active.latitude !== null && active.longitude !== null
   const approximate = isApproximate(active.locationAccuracyMeters)
-  const clues = [
-    ['Floor', active.floorLevel],
-    ['Zone', active.zone],
-    ['Row', active.row],
-    ['Bay / pillar', active.bayOrPillar],
-  ].filter(([, value]) => value)
 
   return (
     <main className="screen screen--with-tabs">
@@ -38,33 +33,25 @@ function ActiveSpot({ active, onSave, onEdit }: { active: ParkingRecord; onSave:
         <div className="stack">
           <span className="badge badge--ink">Active spot</span>
 
-          {active.hasPhoto && (
-            <div className="photo-frame">
-              {photoUrl && <img src={photoUrl} alt="Photo of where you parked" data-testid="active-photo" />}
-            </div>
-          )}
-
-          {clues.length > 0 && (
-            <dl className="clues" data-testid="active-clues">
-              {clues.map(([name, value]) => (
-                <div key={name}>
-                  <dt>{name}</dt>
-                  <dd>{value}</dd>
-                </div>
-              ))}
-            </dl>
-          )}
-          {active.notes && (
-            <p className="t-body-md" data-testid="active-notes">
-              {active.notes}
+          {isStale(active.createdAt) && (
+            <p className="status-line" role="status" data-testid="stale">
+              <AlertIcon />
+              <span>{staleMessage(active.createdAt)}</span>
             </p>
           )}
+
+          <SpotClues record={active} />
 
           <h2 className="t-display-sm" data-testid="active-label">
             {locationSummary(active)}
           </h2>
 
-          {hasCoords && active.locationAccuracyMeters !== null && (
+          {hasCoords && active.locationSource === 'adjusted' && (
+            <p className="t-body-md" data-testid="active-adjusted">
+              Pin placed by hand
+            </p>
+          )}
+          {hasCoords && active.locationSource !== 'adjusted' && active.locationAccuracyMeters !== null && (
             <p className="t-body-md" data-testid="active-accuracy">
               {approximate ? 'Approximate location' : 'Location'} {formatAccuracy(active.locationAccuracyMeters)}
             </p>
@@ -84,21 +71,22 @@ function ActiveSpot({ active, onSave, onEdit }: { active: ParkingRecord; onSave:
           </p>
         </div>
       </Card>
-      <Button block onClick={onSave}>
-        <PinIcon /> Save a new spot
+      <Button block onClick={onFind}>
+        <PinIcon /> Find my vehicle
       </Button>
-      <Button block variant="secondary" onClick={onEdit}>
+      <Button block variant="secondary" onClick={onSave}>
+        Save a new spot
+      </Button>
+      <Button block variant="subtle" onClick={onEdit}>
         Edit details
       </Button>
-      <p className="t-caption t-secondary">
-        Saving a new spot moves this one to history. Directions arrive in a later step of the build.
-      </p>
+      <p className="t-caption t-secondary">Saving a new spot moves this one to history.</p>
     </main>
   )
 }
 
-export default function Home({ active, onSave, onEdit }: HomeProps) {
-  if (active) return <ActiveSpot active={active} onSave={onSave} onEdit={onEdit} />
+export default function Home({ active, onSave, onEdit, onFind }: HomeProps) {
+  if (active) return <ActiveSpot active={active} onSave={onSave} onEdit={onEdit} onFind={onFind} />
 
   return (
     <main className="screen screen--with-tabs">

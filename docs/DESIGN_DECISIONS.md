@@ -34,6 +34,13 @@ This is a style match only. No Uber name, logo or artwork is used.
 | D24 | Photos show in a 4:3 frame with a 16px radius, on `canvas-soft` while empty, cropped with `object-fit: cover`. The active card puts the photo first, then the clues. | Plan section 5 (4:3 imagery in card chrome). Recognition by photo beats reading coordinates. | 4 |
 | D25 | Clues (floor, zone, row, bay) are a small grid of 12px grey labels over 16px/500 black values. Empty clues are not shown. | Uses the caption and body-md-strong tokens. No new styles. | 4 |
 | D26 | Photo problems use the same error pattern as D4 (icon + black text, `role="alert"`) and sit under the photo buttons. | Never colour-only, and never blocks saving. | 4 |
+| D27 | Map tiles are OpenStreetMap's standard coloured tiles, shown full-bleed in a 4:3 frame with a 16px radius. This is the one place colour appears. The UI around it stays black and white. | The design file allows full-bleed maps inside cards. Monochrome tiles would need a third-party tile service. | 5 |
+| D28 | The map pin is a black SVG pin with a white outline and a white centre dot. The GPS accuracy circle is a 1px black outline with an 8% black fill. | No second accent colour. Drawn in code, so no marker image files. | 5 |
+| D29 | Leaflet zoom controls are restyled as a floating white pill with the Level 3 shadow and 44px buttons. | Matches `button-floating` and the 44px touch rule. Leaflet's default is 30px. | 5 |
+| D30 | Map problems (offline, tiles blocked, map failed to load) replace the map with a `canvas-soft` panel, the small map-offline illustration and two lines of text. | Reuses the empty-state pattern (D16). Plan A10 requires a clear "Map unavailable offline" state. | 5 |
+| D31 | Home's primary is "Find my vehicle". "Save a new spot" becomes the outline secondary and "Edit details" the subtle button. On Find, "Get directions" is the only black pill, with Apple Maps and OpenStreetMap as outline buttons. | One black pill per viewport, with the most likely next action first. | 5 |
+| D32 | The stale notice is a status line with the alert icon in black text, inside the active card on Home and in a `card-soft-tinted` on Find. | Reuses D4 (never colour-only). | 5 |
+| D33 | The "General area, not the exact bay" explanation is a `card-soft-tinted` with a bold title and 14px text, placed between the map and the directions buttons. | The plan requires text that separates the general area from the exact bay. | 5 |
 
 ## To record as they arise
 

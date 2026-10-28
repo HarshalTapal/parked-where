@@ -7,7 +7,9 @@ import { getActive, getRecord, undoSave, updateSpot } from './data/records'
 import type { ParkingRecord } from './data/types'
 import { reverseGeocode } from './lib/geocode'
 import ComingSoon from './screens/ComingSoon'
+import AdjustPin from './screens/AdjustPin'
 import DetailsSheet from './screens/DetailsSheet'
+import FindVehicle from './screens/FindVehicle'
 import Home from './screens/Home'
 import Onboarding from './screens/Onboarding'
 import SaveFlow from './screens/SaveFlow'
@@ -136,12 +138,45 @@ function Main() {
   }
   if (!onboarded && !active) return <Onboarding onDone={finishOnboarding} />
 
+  // Sub-screens of the active spot. Without an active spot they fall back to Home.
+  if (active && route === '#/find') {
+    return (
+      <FindVehicle
+        record={active}
+        onBack={() => (window.location.hash = '#/')}
+        onAdjust={() => (window.location.hash = '#/adjust')}
+        onEdit={() => {
+          window.location.hash = '#/'
+          setDetails({ fresh: false })
+        }}
+      />
+    )
+  }
+  if (active && route === '#/adjust' && active.latitude !== null) {
+    return (
+      <AdjustPin
+        key={active.id}
+        record={active}
+        onBack={() => (window.location.hash = '#/find')}
+        onSaved={(updated) => {
+          setActive(updated)
+          window.location.hash = '#/find'
+        }}
+      />
+    )
+  }
+
   const tab = route === '#/history' ? 'history' : route === '#/settings' ? 'settings' : 'home'
 
   return (
     <>
       {tab === 'home' && (
-        <Home active={active} onSave={() => setSaving(true)} onEdit={() => setDetails({ fresh: false })} />
+        <Home
+          active={active}
+          onSave={() => setSaving(true)}
+          onEdit={() => setDetails({ fresh: false })}
+          onFind={() => (window.location.hash = '#/find')}
+        />
       )}
       {tab === 'history' && <ComingSoon title="History" />}
       {tab === 'settings' && <ComingSoon title="Settings" />}
