@@ -58,9 +58,10 @@ export function createMap(el: HTMLElement, o: MapOptions): MapHandle {
 
   const start = L.latLng(o.latitude, o.longitude)
   const marker = L.marker(start, {
-    icon: L.divIcon({ className: 'pin-icon', html: PIN_SVG, iconSize: [36, 44], iconAnchor: [18, 44] }),
+    icon: L.divIcon({ className: 'pin-icon', html: PIN_SVG, iconSize: [44, 44], iconAnchor: [22, 44] }),
     draggable: o.draggable,
-    keyboard: true,
+    // Only a pin that can be moved is worth a tab stop; on Find it would do nothing.
+    keyboard: o.draggable,
     title: o.title,
   }).addTo(map)
 

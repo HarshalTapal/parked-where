@@ -55,6 +55,9 @@ This is a style match only. No Uber name, logo or artwork is used.
 | D45 | Settings gets an "Install and offline" `card-content` card: one status sentence for offline readiness, then either an outline "Install app" pill (only when the browser offers one), "You are using the installed app.", or collapsed how-to steps. | Reuses D38/D39. No fake install button where a browser offers no install prompt (iPhone Safari). | 8 |
 | D46 | The details sheet shows a map preview ("Where we saved it") straight after the heading, with the pin, the GPS accuracy circle and the outline "Adjust pin on map" button directly under it. The preview does not pan or move the pin. | The user wants to check the detected spot against where they really are, straight after saving. A map that pans inside a scrolling sheet captures touch scrolling, so moving the pin stays on its own screen (D37). | fix after 8 |
 | D47 | When the map shows "could not load", it offers an outline "Try again" pill that rebuilds the map. Tiles that fail are asked for again up to three times (1 s, 2.5 s, 5 s) before the panel appears. | One failed request must not leave a permanent grey hole. Offline keeps its own message and no button. | fix after 8 |
+| D48 | Chips are at least 44px wide as well as tall. The map pin is a 44px-wide touch target with the 36px drawing centred in it. | The 44px rule covers both directions. Single-character chips (G, 1 to 5) and the pin were narrower. | 9 |
+| D49 | The pin is a keyboard stop only where it can be moved (Adjust pin). On Find and in the sheet preview it is not focusable. | A tab stop that does nothing is noise for keyboard and screen-reader users. | 9 |
+| D50 | When an empty state is the whole screen (Home with no spot), its title is the page `h1`. Its look does not change. | Every screen needs one top-level heading for screen readers. | 9 |
 
 ## To record as they arise
 

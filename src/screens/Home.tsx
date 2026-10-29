@@ -85,6 +85,7 @@ export default function Home({ active, onSave, onEdit, onFind }: HomeProps) {
   return (
     <main className="screen screen--with-tabs">
       <EmptyState
+        heading="h1"
         art={<ParkedCarArt title="A car parked beside a location pin" />}
         title="No parking saved"
         text="Tap Save parking when you leave your vehicle. We save the spot on a map and let you add a photo and floor, row or bay."
